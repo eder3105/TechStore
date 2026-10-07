@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TechStore</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font:15px/1.5 "Segoe UI",system-ui,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;transition:background .3s}
+body.light{background:#6c7ff0;color:#12306b}body.dark{background:#0d0b14;color:#eee}body.app{background:#eef1f6;color:#1b2430;align-items:flex-start}
+.card{display:flex;width:100%;max-width:880px;min-height:500px;border-radius:14px;overflow:hidden;background:#fff}
+.dark .card{background:#15121f;border:1px solid #2a2440}.form{flex:1;padding:36px 34px;display:flex;flex-direction:column;justify-content:center}
+.side{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:30px}
+.light .form{background:#dbe5ef;margin:16px 0 16px 16px;border-radius:14px}.light .side{background:#fff}
+.dark .side{background:radial-gradient(circle at 30% 20%,#6a2c9a,#1a0f3a 60%,#0b0814);color:#fff}
+.dark .form{background:#0c0a12}h1{margin:0 0 18px;font-size:26px;letter-spacing:.08em;text-align:center}.dark h1{letter-spacing:0;font-size:22px}
+label{font-size:12px;opacity:.75;margin-top:12px;display:block}
+input,select{width:100%;padding:9px 4px;font:inherit;background:transparent;border:0;border-bottom:2px solid #12306b;color:inherit;outline:0}
+.dark input,.dark select{border:1px solid #2d2745;border-radius:6px;padding:10px;background:#16121f}.dark select option{background:#16121f}
+button{margin-top:20px;padding:11px;border:0;border-radius:6px;font:inherit;font-weight:600;letter-spacing:.08em;color:#fff;cursor:pointer;background:linear-gradient(90deg,#6c7ff0,#8aa0ff)}
+.dark button{background:#8a3ffc;letter-spacing:0}button.alt{background:#fff;color:#12306b;border:1px solid #bcc9d8;margin-top:8px;display:flex;gap:8px;justify-content:center;align-items:center}
+.row{display:flex;gap:8px}.row>*{flex:1}.link{color:inherit;text-decoration:underline;cursor:pointer;font-size:13px;text-align:center;margin-top:14px}
+#msg{min-height:20px;margin-top:10px;font-size:13px;text-align:center;font-weight:600}.err{color:#c62828}.ok{color:#1b873f}.dark .err{color:#ff7b8a}
+.lock{font-size:80px}.hide{display:none!important}
+.app .wrapper{width:100%;max-width:1000px;margin:0 auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.badge{background:#6c7ff0;color:#fff;border-radius:99px;padding:2px 10px;font-size:12px;margin-left:8px}
+.panel{background:#fff;border:1px solid #d8dfe8;border-radius:10px;padding:16px;margin-bottom:14px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:8px;border-bottom:1px solid #e6ebf1}
+.app button{margin:0 4px 0 0;padding:5px 10px;letter-spacing:0;font-size:13px}.app button.red{background:#c62828}.app button.gray{background:#667}
+.app input,.app select{border:1px solid #c5cfdb;border-radius:6px;padding:6px 8px;width:auto}
+#toast{position:fixed;bottom:20px;right:20px;padding:12px 16px;border-radius:8px;color:#fff;display:none;max-width:340px;font-weight:600}
+@media(max-width:700px){.side{display:none}.light .form{margin:0;border-radius:0}}
+</style></head><body class="light">
+
+<div id="vLogin" class="card"><div class="form"><h1>BIENVENIDO</h1>
+<label>Correo</label><input id="le" type="email" autocomplete="username"><label>Contraseña</label><input id="lp" type="password" autocomplete="current-password">
+<button onclick="login()">INICIAR SESIÓN</button>
+<button class="alt" onclick="location='/auth/google'">Continuar con Google</button><button class="alt" onclick="location='/auth/github'">Continuar con GitHub</button>
+<div class="link" onclick="show('vReg')">¿No tienes cuenta? Regístrate</div><div id="msg"></div></div>
+<div class="side"><div class="lock">🔐</div><h2>TechStore</h2><p>Inventario seguro para toda la cadena</p></div></div>
+
+<div id="vReg" class="card hide"><div class="side"><h2>Únete a TechStore</h2><p>Crea tu cuenta y gestiona el inventario de tu tienda.</p></div>
+<div class="form"><h1>Crear cuenta</h1>
+<label>Nombre completo</label><input id="rn"><label>Correo</label><input id="re" type="email">
+<div class="row"><div><label>Contraseña</label><input id="rp" type="password"></div><div><label>Confirmar</label><input id="rp2" type="password"></div></div>
+<div class="row"><div><label>Tienda</label><select id="rt"><option>Lima-01</option><option>Cusco-02</option></select></div>
+<div><label>Rol (solo para pruebas del lab)</label><select id="rr"><option>Administrador</option><option>Gerente</option><option selected>Ventas</option><option>Auditor</option></select></div></div>
+<button onclick="register()">Crear cuenta</button><div class="link" onclick="show('vLogin')">¿Ya tienes cuenta? Inicia sesión</div><div id="msg2"></div></div></div>
+
+<div id="vMfa" class="card hide"><div class="form" style="margin:16px;border-radius:14px"><h1>Verificación en dos pasos</h1>
+<div id="setup" class="hide" style="text-align:center"><p>Escanea el QR con Google Authenticator</p><img id="qr" width="160"><p style="font-size:12px;word-break:break-all">Clave: <b id="sec"></b></p></div>
+<label>Código de 6 dígitos</label><input id="mc" inputmode="numeric" maxlength="6" onkeydown="if(event.key==='Enter')mfa()"><button onclick="mfa()">VERIFICAR</button>
+<div class="link" onclick="show('vLogin')">Volver</div><div id="msg3"></div></div></div>
+
+<div id="vApp" class="wrapper hide"><div class="top"><h2 style="margin:0">TechStore · Inventario <span class="badge" id="rol"></span></h2>
+<div><span id="who"></span> <button class="gray" onclick="logout()">Salir</button></div></div>
+<div class="panel"><h3 style="margin-top:0">Productos</h3><table id="tb"></table>
+<p><b>Nuevo producto:</b> <input id="pn" placeholder="Nombre"> <input id="pp" type="number" placeholder="Precio"> <input id="ps" type="number" placeholder="Stock"> <button onclick="addP()">Agregar</button></p></div>
+<div class="panel"><button onclick="rep()">Ver reporte</button><button onclick="users()">Gestionar usuarios</button><pre id="out"></pre></div>
+<p style="font-size:12px;color:#667">Todos los botones se muestran a propósito: el servidor es quien niega las acciones no permitidas (error 403).</p></div>
+<div id="toast"></div>
+<script>
+let tmp=null,tok=null;const $=i=>document.getElementById(i);
+const show=v=>{['vLogin','vReg','vMfa','vApp'].forEach(x=>$(x).classList.toggle('hide',x!==v));document.body.className=v==='vReg'?'dark':v==='vApp'?'app':'light';['msg','msg2','msg3'].forEach(m=>$(m).textContent='')};
+const say=(id,t,ok)=>{$(id).textContent=t;$(id).className=ok?'ok':'err'};
+const toast=(t,ok)=>{const e=$('toast');e.textContent=t;e.style.background=ok?'#1b873f':'#c62828';e.style.display='block';setTimeout(()=>e.style.display='none',3500)};
+async function api(url,m='GET',b,t=tok){const r=await fetch(url,{method:m,headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:b?JSON.stringify(b):undefined});
+ const j=await r.json().catch(()=>({}));return{ok:r.ok,status:r.status,j}}
+async function register(){if($('rp').value!==$('rp2').value)return say('msg2','Las contraseñas no coinciden');
+ const r=await api('/api/register','POST',{nombre:$('rn').value,email:$('re').value,password:$('rp').value,tienda:$('rt').value,rol:$('rr').value});
+ if(r.ok){show('vLogin');$('le').value=$('re').value;say('msg','Cuenta creada. Inicia sesión',true)}else say('msg2',r.j.error)}
+async function login(){const r=await api('/api/login','POST',{email:$('le').value,password:$('lp').value});
+ if(!r.ok)return say('msg',r.j.error);tmp=r.j.tempToken;show('vMfa');$('mc').value='';
+ if(r.j.mfa_setup){const s=await api('/api/mfa/setup','GET',null,tmp);$('qr').src=s.j.qr;$('sec').textContent=s.j.secret;$('setup').classList.remove('hide')}else $('setup').classList.add('hide')}
+async function mfa(){const r=await api('/api/mfa/verify','POST',{code:$('mc').value},tmp);
+ if(!r.ok){say('msg3',r.j.error);if(r.status===429)setTimeout(()=>show('vLogin'),1500);return}enter(r.j.token)}
+async function enter(t){tok=t;history.replaceState(null,'','/');const r=await api('/api/me');if(!r.ok)return show('vLogin');
+ $('who').textContent=r.j.nombre+' · '+r.j.tienda;$('rol').textContent=r.j.rol;show('vApp');load()}
+function logout(){tok=tmp=null;show('vLogin')}
+async function load(){const r=await api('/api/productos');$('tb').innerHTML='<tr><th>Producto</th><th>Tienda</th><th>Precio</th><th>Stock</th><th>Acciones</th></tr>'+
+ r.j.map(p=>`<tr><td>${p.nombre}</td><td>${p.tienda}</td><td>S/ ${p.precio}</td><td>${p.stock}</td><td>
+ <button onclick="price(${p.id})">Precio</button><button onclick="stock(${p.id})">Stock</button><button class="red" onclick="del(${p.id})">Eliminar</button></td></tr>`).join('')}
+async function act(r,okMsg){toast(r.ok?okMsg:r.j.error,r.ok);if(r.ok)load()}
+const price=async i=>{const v=prompt('Nuevo precio');if(v)act(await api('/api/productos/'+i,'PUT',{precio:v}),'Precio actualizado')};
+const stock=async i=>{const v=prompt('Nuevo stock');if(v)act(await api('/api/productos/'+i+'/stock','PATCH',{stock:v}),'Stock actualizado')};
+const del=async i=>{if(confirm('¿Eliminar?'))act(await api('/api/productos/'+i,'DELETE'),'Producto eliminado')};
+const addP=async()=>act(await api('/api/productos','POST',{nombre:$('pn').value,precio:$('pp').value,stock:$('ps').value}),'Producto creado');
+async function rep(){const r=await api('/api/reportes');$('out').textContent=r.ok?JSON.stringify(r.j,null,2):'';if(!r.ok)toast(r.j.error)}
+async function users(){const r=await api('/api/usuarios');if(!r.ok){$('out').textContent='';return toast(r.j.error)}
+ $('out').innerHTML=r.j.map(u=>`${u.email} (${u.tienda}) <select onchange="setRol('${u.email}',this.value)">${['Administrador','Gerente','Ventas','Auditor'].map(x=>`<option ${x===u.rol?'selected':''}>${x}</option>`).join('')}</select>`).join('<br>')}
+const setRol=async(e,r)=>act(await api('/api/usuarios/'+e+'/rol','PUT',{rol:r}),'Rol actualizado');
+const q=new URLSearchParams(location.search);if(q.get('token'))enter(q.get('token'));if(q.get('error'))say('msg','No se pudo iniciar con el proveedor social');
+</script></body></html>
